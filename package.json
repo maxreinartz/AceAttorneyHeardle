@@ -1,0 +1,13 @@
+{
+  "name": "ace-attorney-heardle",
+  "version": "1.0.0",
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "frontend": "cd frontend && npm run start",
+    "backend": "cd backend && npm start",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

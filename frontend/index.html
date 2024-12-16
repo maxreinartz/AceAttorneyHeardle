@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ace Attorney Heardle</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="court">
+    <div class="theme-selector">
+      <button onclick="setTheme('court')">Court</button>
+      <button onclick="setTheme('simple-light')">Light</button>
+      <button onclick="setTheme('simple-dark')">Dark</button>
+    </div>
+
+    <button id="accountButton" class="account-button">
+      <span id="accountUsername">Account</span>
+      <span id="accountScore" class="account-score hidden"></span>
+    </button>
+
+    <div class="account-details-overlay" id="accountDetailsOverlay">
+      <div id="accountDetails" class="account-details-popup hidden">
+        <div class="user-info">
+          <div class="profile-picture">
+            <img
+              id="userProfilePic"
+              src="assets/img/default-avatar.png"
+              alt="Profile Picture"
+            />
+            <label for="profileUpload" class="profile-upload-label"
+              >Upload Picture</label
+            >
+            <input
+              type="file"
+              id="profileUpload"
+              class="profile-upload"
+              accept="image/*"
+            />
+          </div>
+          <h3 id="detailsUsername"></h3>
+          <p id="detailsScore"></p>
+        </div>
+        <div class="user-stats">
+          <h4>Statistics</h4>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="gamesPlayed">0</div>
+              <div class="stat-label">Played</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="winRate">0%</div>
+              <div class="stat-label">Win Rate</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="currentStreak">0</div>
+              <div class="stat-label">Streak</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="bestStreak">0</div>
+              <div class="stat-label">Best</div>
+            </div>
+          </div>
+          <div class="guess-distribution" id="guessDistribution"></div>
+        </div>
+        <div class="account-actions">
+          <button id="logoutButton">Log Out</button>
+          <button id="deleteAccountButton" class="danger">
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="leaderboard">
+      <h2>Top Players</h2>
+      <div id="leaderboardList"></div>
+    </div>
+
+    <!-- Add account modal -->
+    <div class="modal-overlay" id="accountModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Account</h2>
+        <div id="accountButtons">
+          <button type="button" onclick="showLogin()">Login</button>
+          <button type="button" onclick="showSignup()">Sign Up</button>
+        </div>
+        <div id="loginForm" class="hidden">
+          <div class="form-content">
+            <input type="text" id="loginUsername" placeholder="Username" />
+            <input type="password" id="loginPassword" placeholder="Password" />
+            <button type="button" id="loginButton">Login</button>
+          </div>
+        </div>
+        <div id="signupForm" class="hidden">
+          <div class="form-content">
+            <input
+              type="text"
+              id="signupUsername"
+              placeholder="Choose username"
+            />
+            <button type="button" id="signupButton">Create Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add password modal -->
+    <div class="modal-overlay" id="passwordModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Save Your Password</h2>
+        <p class="password-warning">
+          Write this down! It cannot be changed or recovered!
+        </p>
+        <div class="password-display" id="passwordDisplay"></div>
+        <button id="passwordConfirmButton" class="modal-button">
+          I've Saved It
+        </button>
+      </div>
+    </div>
+
+    <div class="game-container">
+      <h1>Ace Attorney Heardle</h1>
+
+      <div class="audio-controls">
+        <div class="control-buttons">
+          <button
+            id="playButton"
+            class="tooltip"
+            data-tooltip="Play current segment"
+            disabled
+          >
+            <span aria-hidden="true">▶</span>
+            <span class="sr-only">Play</span>
+          </button>
+          <button
+            id="skipButton"
+            class="tooltip"
+            data-tooltip="Skip to next segment"
+            disabled
+          >
+            <span aria-hidden="true">⏭</span>
+            <span class="sr-only">Skip</span>
+          </button>
+        </div>
+        <div class="progress-container" aria-label="Audio progress">
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              role="progressbar"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guess-container">
+        <input
+          type="text"
+          id="guessInput"
+          placeholder="Enter song title..."
+          aria-label="Song title guess"
+          autocomplete="off"
+        />
+        <button
+          id="submitGuess"
+          class="tooltip"
+          data-tooltip="Submit your guess"
+        >
+          Submit
+        </button>
+      </div>
+
+      <div class="lives-display" role="status" aria-label="Remaining attempts">
+        <div class="attempt tooltip" data-tooltip="First attempt"></div>
+        <div class="attempt tooltip" data-tooltip="Second attempt"></div>
+        <div class="attempt tooltip" data-tooltip="Third attempt"></div>
+        <div class="attempt tooltip" data-tooltip="Fourth attempt"></div>
+        <div class="attempt tooltip" data-tooltip="Final attempt"></div>
+      </div>
+
+      <div id="objection" class="objection hidden">
+        <img src="assets/img/objection.png" alt="Objection!" />
+      </div>
+
+      <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+          <h2 class="modal-title" id="modalTitle"></h2>
+          <p class="modal-text" id="modalText"></p>
+          <button class="modal-button" id="nextSongButton">Next Song</button>
+        </div>
+      </div>
+
+      <!-- Add delete confirmation modal before closing body tag -->
+      <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal-content">
+          <h2 class="modal-title">Delete Account</h2>
+          <p class="warning-text">This action cannot be undone!</p>
+          <input
+            type="password"
+            id="deletePassword"
+            placeholder="Enter password to confirm"
+          />
+          <button class="modal-button danger" id="confirmDeleteButton">
+            Delete Account
+          </button>
+          <button class="modal-button" id="cancelDeleteButton">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Add profile picture selector modal -->
+      <div class="modal-overlay" id="profilePicModal">
+        <div class="modal-content">
+          <h2 class="modal-title">Select Profile Picture</h2>
+          <div class="profile-grid" id="profilePicGrid"></div>
+          <button class="modal-button" id="cancelProfilePic">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        Copyright (c) 2024, Max Reinartz •
+        <a
+          href="https://github.com/maxreinartz/AceAttorneyHeardle"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
+        •
+        <a
+          href="https://bsky.app/profile/max7689.bsky.social"
+          target="_blank"
+          rel="noopener"
+          >BlueSky</a
+        ><br />
+        The Ace Attorney series is property of Capcom • This project is not
+        associated with Capcom
+      </p>
+    </footer>
+
+    <script src="js/index.js" type="module"></script>
+  </body>
+</html>
