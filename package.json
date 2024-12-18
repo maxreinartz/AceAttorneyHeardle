@@ -1,0 +1,10 @@
+{
+  "name": "ace-attorney-heardle-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx live-server --port=7689 --no-browser"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
