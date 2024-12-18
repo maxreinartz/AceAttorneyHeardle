@@ -27,6 +27,7 @@ import {
   updateScore,
 } from "./api.js";
 import { showMessage } from "./utils.js";
+import { API_URL } from "./config.js";
 
 function initializeEventListeners() {
   // Theme handlers
@@ -184,6 +185,84 @@ function initializeEventListeners() {
         await updateLeaderboard();
       } catch (error) {
         showMessage("Error", "Failed to delete account");
+      }
+    });
+
+  // Add search functionality
+  const searchButton = document.getElementById("searchButton");
+  const searchModal = document.getElementById("searchModal");
+  const searchInput = document.getElementById("searchInput");
+  const searchResults = document.getElementById("searchResults");
+  const closeSearchButton = document.getElementById("closeSearchButton");
+
+  searchButton.addEventListener("click", () => {
+    searchModal.classList.add("show");
+    searchInput.value = "";
+    searchResults.innerHTML = "";
+  });
+
+  closeSearchButton.addEventListener("click", () => {
+    searchModal.classList.remove("show");
+  });
+
+  let searchTimeout;
+  searchInput.addEventListener("input", (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+      const query = e.target.value.trim();
+      if (query.length < 2) {
+        searchResults.innerHTML = "";
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/search-users?query=${encodeURIComponent(query)}`
+        );
+        const users = await response.json();
+
+        searchResults.innerHTML = users
+          .map(
+            (user) => `
+          <div class="search-result">
+            <img src="${user.profilePic || "assets/img/default-avatar.png"}" 
+                 alt="${user.username}'s avatar"
+                 onerror="this.src='assets/img/default-avatar.png'">
+            <div class="user-info">
+              <div class="username">${user.username}</div>
+              <div class="stats">
+                Score: ${user.score} • Games: ${user.stats.gamesPlayed} • 
+                Wins: ${user.stats.gamesWon} • Streak: ${user.stats.winStreak}
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      } catch (error) {
+        console.error("Search failed:", error);
+        searchResults.innerHTML =
+          "<div class='search-error'>Failed to search users</div>";
+      }
+    }, 300);
+  });
+
+  // Add mobile button handlers
+  document
+    .getElementById("mobileAccountButton")
+    .addEventListener("click", () => {
+      const accountButton = document.getElementById("accountButton");
+      if (accountButton) {
+        accountButton.click();
+      }
+    });
+
+  document
+    .getElementById("mobileSearchButton")
+    .addEventListener("click", () => {
+      const searchButton = document.getElementById("searchButton");
+      if (searchButton) {
+        searchButton.click();
       }
     });
 }

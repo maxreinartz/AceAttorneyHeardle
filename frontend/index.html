@@ -7,16 +7,41 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-theme="court">
-    <div class="theme-selector">
+    <!-- Desktop Navigation -->
+    <div class="desktop-nav">
+      <button id="accountButton" class="account-button">
+        <span id="accountUsername">Account</span>
+        <span id="accountScore" class="account-score hidden"></span>
+      </button>
+      <button id="searchButton" class="search-button">Search Players</button>
+      <div class="leaderboard">
+        <h2>Top Players</h2>
+        <div id="leaderboardList"></div>
+      </div>
+    </div>
+
+    <!-- Theme Selector - visible on desktop -->
+    <div class="theme-selector desktop-only">
       <button onclick="setTheme('court')">Court</button>
       <button onclick="setTheme('simple-light')">Light</button>
       <button onclick="setTheme('simple-dark')">Dark</button>
     </div>
 
-    <button id="accountButton" class="account-button">
-      <span id="accountUsername">Account</span>
-      <span id="accountScore" class="account-score hidden"></span>
-    </button>
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-container">
+      <div class="theme-selector">
+        <button onclick="setTheme('court')">Court</button>
+        <button onclick="setTheme('simple-light')">Light</button>
+        <button onclick="setTheme('simple-dark')">Dark</button>
+      </div>
+      <button id="mobileAccountButton" class="account-button">
+        <span id="mobileAccountUsername">Account</span>
+        <span id="mobileAccountScore" class="account-score hidden"></span>
+      </button>
+      <button id="mobileSearchButton" class="search-button">
+        Search Players
+      </button>
+    </div>
 
     <div class="account-details-overlay" id="accountDetailsOverlay">
       <div id="accountDetails" class="account-details-popup hidden">
@@ -68,53 +93,6 @@
             Delete Account
           </button>
         </div>
-      </div>
-    </div>
-
-    <div class="leaderboard">
-      <h2>Top Players</h2>
-      <div id="leaderboardList"></div>
-    </div>
-
-    <!-- Add account modal -->
-    <div class="modal-overlay" id="accountModal">
-      <div class="modal-content">
-        <h2 class="modal-title">Account</h2>
-        <div id="accountButtons">
-          <button type="button" onclick="showLogin()">Login</button>
-          <button type="button" onclick="showSignup()">Sign Up</button>
-        </div>
-        <div id="loginForm" class="hidden">
-          <div class="form-content">
-            <input type="text" id="loginUsername" placeholder="Username" />
-            <input type="password" id="loginPassword" placeholder="Password" />
-            <button type="button" id="loginButton">Login</button>
-          </div>
-        </div>
-        <div id="signupForm" class="hidden">
-          <div class="form-content">
-            <input
-              type="text"
-              id="signupUsername"
-              placeholder="Choose username"
-            />
-            <button type="button" id="signupButton">Create Account</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add password modal -->
-    <div class="modal-overlay" id="passwordModal">
-      <div class="modal-content">
-        <h2 class="modal-title">Save Your Password</h2>
-        <p class="password-warning">
-          Write this down! It cannot be changed or recovered!
-        </p>
-        <div class="password-display" id="passwordDisplay"></div>
-        <button id="passwordConfirmButton" class="modal-button">
-          I've Saved It
-        </button>
       </div>
     </div>
 
@@ -191,31 +169,82 @@
           <button class="modal-button" id="nextSongButton">Next Song</button>
         </div>
       </div>
+    </div>
 
-      <!-- Add delete confirmation modal before closing body tag -->
-      <div class="modal-overlay" id="deleteConfirmModal">
-        <div class="modal-content">
-          <h2 class="modal-title">Delete Account</h2>
-          <p class="warning-text">This action cannot be undone!</p>
-          <input
-            type="password"
-            id="deletePassword"
-            placeholder="Enter password to confirm"
-          />
-          <button class="modal-button danger" id="confirmDeleteButton">
-            Delete Account
-          </button>
-          <button class="modal-button" id="cancelDeleteButton">Cancel</button>
+    <!-- Mobile Leaderboard -->
+    <div class="mobile-leaderboard">
+      <h2>Top Players</h2>
+      <div id="leaderboardList"></div>
+    </div>
+
+    <!-- Add account modal -->
+    <div class="modal-overlay" id="accountModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Account</h2>
+        <div id="accountButtons">
+          <button type="button" onclick="showLogin()">Login</button>
+          <button type="button" onclick="showSignup()">Sign Up</button>
+        </div>
+        <div id="loginForm" class="hidden">
+          <div class="form-content">
+            <input type="text" id="loginUsername" placeholder="Username" />
+            <input type="password" id="loginPassword" placeholder="Password" />
+            <button type="button" id="loginButton">Login</button>
+          </div>
+        </div>
+        <div id="signupForm" class="hidden">
+          <div class="form-content">
+            <input
+              type="text"
+              id="signupUsername"
+              placeholder="Choose username"
+            />
+            <button type="button" id="signupButton">Create Account</button>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Add profile picture selector modal -->
-      <div class="modal-overlay" id="profilePicModal">
-        <div class="modal-content">
-          <h2 class="modal-title">Select Profile Picture</h2>
-          <div class="profile-grid" id="profilePicGrid"></div>
-          <button class="modal-button" id="cancelProfilePic">Cancel</button>
+    <!-- Add password modal -->
+    <div class="modal-overlay" id="passwordModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Save Your Password</h2>
+        <p class="password-warning">
+          Write this down! It cannot be changed or recovered!
+        </p>
+        <div class="password-display" id="passwordDisplay"></div>
+        <button id="passwordConfirmButton" class="modal-button">
+          I've Saved It
+        </button>
+      </div>
+    </div>
+
+    <!-- Add delete confirmation modal before closing body tag -->
+    <div class="modal-overlay" id="deleteConfirmModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Delete Account</h2>
+        <p class="warning-text">This action cannot be undone!</p>
+        <input
+          type="password"
+          id="deletePassword"
+          placeholder="Enter password to confirm"
+        />
+        <button class="modal-button danger" id="confirmDeleteButton">
+          Delete Account
+        </button>
+        <button class="modal-button" id="cancelDeleteButton">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Add search modal -->
+    <div class="modal-overlay" id="searchModal">
+      <div class="modal-content">
+        <h2 class="modal-title">Search Players</h2>
+        <div class="search-container">
+          <input type="text" id="searchInput" placeholder="Enter username..." />
+          <div id="searchResults" class="search-results"></div>
         </div>
+        <button class="modal-button" id="closeSearchButton">Close</button>
       </div>
     </div>
 

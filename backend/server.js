@@ -525,6 +525,44 @@ app.post("/api/verify", async (req, res) => {
   });
 });
 
+app.get("/api/search-users", async (req, res) => {
+  const { query } = req.query;
+  if (!query) {
+    return res.json([]);
+  }
+
+  try {
+    const [users, scores, stats] = await Promise.all([
+      loadUsers(),
+      loadScores(),
+      loadStats(),
+    ]);
+
+    const matches = Object.keys(users)
+      .filter((username) =>
+        username.toLowerCase().includes(query.toLowerCase())
+      )
+      .slice(0, 10)
+      .map((username) => ({
+        username,
+        score: scores[username] || 0,
+        stats: stats[username] || {
+          gamesPlayed: 0,
+          gamesWon: 0,
+          winStreak: 0,
+        },
+        profilePic: users[username].profilePic
+          ? `/uploads/${users[username].profilePic}`
+          : null,
+      }));
+
+    res.json(matches);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ error: "Failed to search users" });
+  }
+});
+
 const PORT = 7688;
 app.listen(PORT, async () => {
   await initDataFiles();
