@@ -1,1 +1,1 @@
-export const API_URL = "http://127.0.0.1:7688";
+export const API_URL = "http://dono-03.danbot.host:2355";
