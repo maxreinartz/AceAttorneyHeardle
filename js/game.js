@@ -208,11 +208,24 @@ export function showObjection() {
   }, 2000);
 }
 
-export function updateAttempt(isCorrect) {
+export function updateAttempt(isCorrect, guessedGame, actualGame) {
   const attempts = document.querySelectorAll(".lives-display .attempt");
   const attempt = getCurrentAttempt();
-  if (!attempts[attempt].classList.contains("skipped")) {
-    attempts[attempt].classList.add(isCorrect ? "correct" : "wrong");
+  const currentAttemptEl = attempts[attempt];
+
+  if (!currentAttemptEl.classList.contains("skipped")) {
+    // Reset any existing game-related classes
+    currentAttemptEl.classList.remove("correct-game", "wrong-game");
+
+    // Add correct/wrong class for the song guess
+    currentAttemptEl.classList.add(isCorrect ? "correct" : "wrong");
+
+    // Add game match/mismatch indicator if we have both games to compare
+    if (guessedGame && actualGame) {
+      currentAttemptEl.classList.add(
+        guessedGame === actualGame ? "correct-game" : "wrong-game"
+      );
+    }
   }
   setCurrentAttempt(attempt + 1);
 }

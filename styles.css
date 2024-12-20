@@ -277,11 +277,9 @@ h1 {
 
 .lives-display {
   display: flex;
-  gap: 0.5rem;
   justify-content: center;
-  margin: 0.5rem 0; /* Reduce margin */
-  z-index: 1; /* Make sure it's above other elements */
-  position: relative;
+  margin: 20px 0;
+  gap: 10px;
 }
 
 .guess-container {
@@ -377,24 +375,35 @@ input {
 }
 
 .attempt {
-  width: clamp(1.25rem, 5vw, 1.75rem);
-  height: clamp(1.25rem, 5vw, 1.75rem);
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background-color: #444;
+  border: 3px solid transparent;
   transition: all 0.3s ease;
-  border: 2px solid var(--accent-color); /* Add border for better visibility */
-}
-
-.attempt.wrong {
-  background: var(--accent-color);
+  position: relative;
 }
 
 .attempt.correct {
-  background: rgb(0, 189, 0);
+  background-color: #4caf50;
+}
+
+.attempt.wrong {
+  background-color: #f44336;
 }
 
 .attempt.skipped {
-  background: #888888;
+  background-color: #808080;
+}
+
+.attempt.correct-game {
+  border-color: #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+}
+
+.attempt.wrong-game {
+  border-color: #f44336;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
 }
 
 .objection {

@@ -9,6 +9,7 @@ import {
   setCurrentAttempt,
   nextSong,
   setTheme,
+  songList, // Add this import
 } from "./game.js";
 import {
   loadSession,
@@ -137,8 +138,13 @@ function initializeEventListeners() {
     const currentSong = getCurrentSong();
     const isCorrect = guess.toLowerCase() === currentSong.title.toLowerCase();
 
+    // Find the guessed song in songList to get its game
+    const guessedSong = songList.find(
+      (song) => song.title.toLowerCase() === guess.toLowerCase()
+    );
+
     showObjection();
-    updateAttempt(isCorrect);
+    updateAttempt(isCorrect, guessedSong?.game, currentSong.game);
 
     if (isCorrect) {
       setTimeout(() => showResults(true), 2500);
