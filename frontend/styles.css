@@ -1164,6 +1164,26 @@ input {
 
 .guess-distribution {
   margin-top: 1rem;
+  width: 100%;
+  padding: 0;
+}
+
+.distribution-bar {
+  display: grid;
+  grid-template-columns: 2rem 1fr 3rem;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+.distribution-fill {
+  background: var(--accent-color);
+  height: 1.5rem;
+  border-radius: 0.75rem;
+  min-width: 4px;
+  transition: width 0.3s ease;
+  width: 0;
 }
 
 .distribution-bar {

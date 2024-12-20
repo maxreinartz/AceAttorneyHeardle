@@ -66,13 +66,26 @@ export async function updateUserStats() {
     const distributionContainer = document.getElementById("guessDistribution");
     distributionContainer.innerHTML = "";
 
+    // Calculate maximum value for scaling and get the available width
+    const allCounts = [...stats.distribution, stats.gamesLost];
+    const maxCount = Math.max(...allCounts);
+    const container = document.getElementById("guessDistribution");
+    const availableWidth = container.offsetWidth - 100; // Subtract space for labels and padding
+
+    // Helper function to calculate width percentage
+    const getWidthPercent = (count) => {
+      if (count === 0) return 1; // Minimum 1% width for empty bars
+      return Math.max(5, (count / maxCount) * 100); // At least 5% width, scale up to 100%
+    };
+
     // Add guesses distribution (1-5 attempts)
     stats.distribution.forEach((count, index) => {
       const bar = document.createElement("div");
       bar.className = "distribution-bar";
+      const widthPercent = getWidthPercent(count);
       bar.innerHTML = `
         <span class="distribution-label">${index + 1}</span>
-        <div class="distribution-fill" style="width: ${count * 20}px"></div>
+        <div class="distribution-fill" style="width: ${widthPercent}%"></div>
         <span class="distribution-value">${count}</span>
       `;
       distributionContainer.appendChild(bar);
@@ -80,17 +93,33 @@ export async function updateUserStats() {
 
     // Add losses distribution if available
     if (stats.gamesLost > 0) {
+      const widthPercent = getWidthPercent(stats.gamesLost);
       const lossBar = document.createElement("div");
       lossBar.className = "distribution-bar loss";
       lossBar.innerHTML = `
         <span class="distribution-label">✕</span>
-        <div class="distribution-fill loss" style="width: ${
-          stats.gamesLost * 20
-        }px"></div>
+        <div class="distribution-fill loss" style="width: ${widthPercent}%"></div>
         <span class="distribution-value">${stats.gamesLost}</span>
       `;
       distributionContainer.appendChild(lossBar);
     }
+
+    // Update width calculation in resize handler
+    const updateWidths = () => {
+      const bars = container.querySelectorAll(".distribution-fill");
+      bars.forEach((bar, index) => {
+        const count = index < 5 ? stats.distribution[index] : stats.gamesLost;
+        const widthPercent = getWidthPercent(count);
+        bar.style.width = `${widthPercent}%`;
+      });
+    };
+
+    // Cleanup old listener if exists
+    if (window.updateDistributionWidths) {
+      window.removeEventListener("resize", window.updateDistributionWidths);
+    }
+    window.updateDistributionWidths = updateWidths;
+    window.addEventListener("resize", updateWidths);
   } catch (error) {
     console.error("Failed to update user stats:", error);
   }
