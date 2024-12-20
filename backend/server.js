@@ -79,6 +79,23 @@ async function initDataFiles() {
   }
 }
 
+// Add this near the other initialization code
+async function initDirectories() {
+  const dirs = [
+    path.join(__dirname, "data"),
+    path.join(__dirname, "public"),
+    path.join(__dirname, "public", "uploads"),
+  ];
+
+  for (const dir of dirs) {
+    try {
+      await fs.mkdir(dir, { recursive: true });
+    } catch (error) {
+      console.error(`Failed to create directory ${dir}:`, error);
+    }
+  }
+}
+
 async function loadUsers() {
   try {
     const data = await fs.readFile(USERS_FILE, "utf8");
@@ -469,6 +486,7 @@ app.post(
   upload.single("profilePic"),
   async (req, res) => {
     const { username } = req.body;
+
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
@@ -479,50 +497,57 @@ app.post(
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check if the uploaded file is an image
-      if (!req.file.mimetype.startsWith("image/")) {
-        return res.status(400).json({ error: "Invalid file type" });
-      }
+      // Ensure directory exists
+      const uploadDir = path.join(__dirname, "public", "uploads");
+      await fs.mkdir(uploadDir, { recursive: true });
 
-      // Check if image size is less than 5MB
-      if (req.file.size > 5 * 1024 * 1024) {
-        return res.status(400).json({ error: "File size exceeds 5MB" });
-      }
-
-      // Check if the resolution is at least 256x256
+      // Process image with error handling
       const image = sharp(req.file.buffer);
-      const { width, height } = await image.metadata();
-      if (width < 256 || height < 256) {
-        return res.status(400).json({ error: "Image resolution too low" });
+      const metadata = await image.metadata();
+
+      if (!metadata.width || !metadata.height) {
+        return res.status(400).json({ error: "Invalid image file" });
       }
 
-      // Process image
-      const processedImage = await sharp(req.file.buffer)
+      // Generate unique filename
+      const fileName = `${username}_${Date.now()}.png`;
+      const filePath = path.join(uploadDir, fileName);
+
+      // Process and save image
+      await sharp(req.file.buffer)
         .resize(256, 256, {
-          // Make it square
           fit: "cover",
           position: "center",
         })
         .png()
-        .toBuffer();
-
-      // Save image
-      const fileName = `${username}_${Date.now()}.png`;
-      const filePath = path.join(__dirname, "public", "uploads", fileName);
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-      await fs.writeFile(filePath, processedImage);
+        .toFile(filePath);
 
       // Update user profile
+      const oldPicture = users[username].profilePic;
       users[username].profilePic = fileName;
       await saveUsers(users);
+
+      // Delete old profile picture if it exists
+      if (oldPicture && oldPicture !== "0") {
+        const oldPath = path.join(uploadDir, oldPicture);
+        try {
+          await fs.unlink(oldPath);
+        } catch (error) {
+          console.error("Failed to delete old profile picture:", error);
+        }
+      }
 
       res.json({
         success: true,
         profilePicUrl: `/uploads/${fileName}`,
       });
     } catch (error) {
-      console.error("Error updating profile picture:", error);
-      res.status(500).json({ error: "Failed to update profile picture" });
+      console.error("Profile picture upload error:", error);
+      res.status(500).json({
+        error: "Failed to process profile picture",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
     }
   }
 );
@@ -588,6 +613,7 @@ app.get("/api/search-users", async (req, res) => {
 
 const PORT = 7688;
 app.listen(PORT, async () => {
+  await initDirectories();
   await initDataFiles();
   await loadSongs();
   console.log(`Server running on http://localhost:${PORT}`);
