@@ -7,6 +7,10 @@ Ace Attorney Heardle is a game where you try to guess the Ace Attorney song from
 - Guess the songs from all 3 of the original Ace Attorney games.
 - Leaderboards to track high scores
 
+## Thanks
+
+- Shoeske78 (Reddit): Helped with TGAA soundtrack
+
 ## Contributing
 
 Contributions are welcome! Please fork the repository and create a pull request. Please note that none of the songs are included in the repository!

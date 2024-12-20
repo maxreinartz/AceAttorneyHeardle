@@ -18,6 +18,7 @@ import {
   updateAccountButton,
   initializeAccountUI,
   checkAuthentication,
+  showUserProfile, // Add this import
 } from "./user.js";
 import { updateLeaderboard } from "./leaderboard.js";
 import {
@@ -231,6 +232,27 @@ function initializeEventListeners() {
           "<div class='search-error'>Failed to search users</div>";
       }
     }, 300);
+  });
+
+  // Add click handler for search results
+  searchResults.addEventListener("click", (e) => {
+    const searchResult = e.target.closest(".search-result");
+    if (searchResult) {
+      const username = searchResult.querySelector(".username").textContent;
+      showUserProfile(username);
+      searchModal.classList.remove("show");
+    }
+  });
+
+  // Add click handler for leaderboard items
+  document.getElementById("leaderboardList").addEventListener("click", (e) => {
+    const leaderboardItem = e.target.closest(".leaderboard-item");
+    if (leaderboardItem) {
+      const username = leaderboardItem.querySelector(
+        ".leaderboard-user span"
+      ).textContent;
+      showUserProfile(username);
+    }
   });
 
   // Add mobile button handlers

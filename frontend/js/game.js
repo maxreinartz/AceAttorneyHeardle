@@ -12,10 +12,29 @@ import { currentUser, updateUserScore, checkAuthentication } from "./user.js";
 import { getRandomSong, getSongList, updateScore } from "./api.js";
 import { API_URL } from "./config.js";
 
+const games = [
+  "Phoenix Wright: Ace Attorney",
+  "Phoenix Wright: Ace Attorney - Justice For All",
+  "Phoenix Wright: Ace Attorney - Trials and Tribulations",
+  "Apollo Justice: Ace Attorney",
+  "Phoenix Wright: Ace Attorney - Dual Destinies",
+  "Phoenix Wright: Ace Attorney - Spirit of Justice",
+  "The Great Ace Attorney Chronicles",
+  "Ace Attorney Investigations: Miles Edgeworth",
+];
+
 let currentSong = null;
 let _currentAttempt = 0;
 let songList = [];
 let useJapaneseTitle = false;
+let enabledGames = new Set(
+  JSON.parse(localStorage.getItem("enabledGames")) || [
+    "Phoenix Wright: Ace Attorney",
+    "Phoenix Wright: Ace Attorney - Justice For All",
+    "Phoenix Wright: Ace Attorney - Trials and Tribulations",
+    "The Great Ace Attorney Chronicles",
+  ]
+);
 
 // Export currentSong as a getter to ensure it's always current
 export const getCurrentSong = () => currentSong;
@@ -39,13 +58,24 @@ export function setTitleMode(isJapanese) {
 }
 
 export function checkGuess(input, song) {
-  const cleanGuess = input.toLowerCase().trim();
+  // Normalize strings by removing special characters and extra spaces
+  const normalizeString = (str) => {
+    return str
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/\s+/g, " ");
+  };
+
+  const cleanGuess = normalizeString(input);
   if (useJapaneseTitle) {
-    const altName = song.alternateNames?.[0]?.toLowerCase().trim();
-    return altName && cleanGuess === altName;
+    const altName = song.alternateNames?.[0];
+    if (altName) {
+      return cleanGuess === normalizeString(altName);
+    }
+    return cleanGuess === normalizeString(song.title);
   } else {
-    const cleanTitle = song.title.toLowerCase().trim();
-    return cleanGuess === cleanTitle;
+    return cleanGuess === normalizeString(song.title);
   }
 }
 
@@ -53,6 +83,7 @@ export async function initGame() {
   initTheme();
   initLivesDisplay();
   initTitleModeButtons();
+  initGameFilters();
   try {
     const playButton = document.getElementById("playButton");
     const skipButton = document.getElementById("skipButton");
@@ -60,7 +91,12 @@ export async function initGame() {
     skipButton.disabled = true;
 
     songList = await getSongList();
-    currentSong = await getRandomSong();
+    const filteredSongs = songList.filter((song) =>
+      enabledGames.has(song.game)
+    );
+    currentSong = await getRandomSong(
+      filteredSongs.length === 0 ? null : [...enabledGames]
+    );
     await setupSongSuggestions();
 
     playButton.disabled = false;
@@ -121,12 +157,21 @@ async function setupSongSuggestions() {
       return;
     }
 
-    const matches = songList
+    // Filter songs by enabled games first
+    const gameFilteredSongs = songList.filter((song) =>
+      enabledGames.has(song.game)
+    );
+
+    // Then filter by search term
+    const matches = gameFilteredSongs
       .filter((song) => {
         const searchValue = value.toLowerCase();
         if (useJapaneseTitle) {
           const altName = song.alternateNames?.[0]?.toLowerCase();
-          return altName && altName.includes(searchValue);
+          if (altName) {
+            return altName.includes(searchValue);
+          }
+          return song.title.toLowerCase().includes(searchValue);
         } else {
           return song.title.toLowerCase().includes(searchValue);
         }
@@ -137,9 +182,10 @@ async function setupSongSuggestions() {
       container.style.display = "block";
       container.innerHTML = matches
         .map((song) => {
-          const displayTitle = useJapaneseTitle
-            ? song.alternateNames?.[0]
-            : song.title;
+          const displayTitle =
+            useJapaneseTitle && song.alternateNames?.[0]
+              ? song.alternateNames[0]
+              : song.title;
           return `<div class="song-suggestion">
             <div class="song-title">${displayTitle}</div>
           </div>`;
@@ -346,22 +392,11 @@ export function initTitleModeButtons() {
 
 document.getElementById("submitGuess").addEventListener("click", () => {
   const guessInput = document.getElementById("guessInput");
-  const guess = guessInput.value.toLowerCase().trim();
   const currentSong = getCurrentSong();
 
-  if (!guess || !currentSong || getCurrentAttempt() >= 5) return;
+  if (!guessInput.value || !currentSong || getCurrentAttempt() >= 5) return;
 
-  // Get list of all valid titles for the current song
-  const validTitles = [currentSong.title.toLowerCase().trim()];
-
-  if (currentSong.alternateNames?.[0]) {
-    validTitles.push(currentSong.alternateNames[0].toLowerCase().trim());
-  }
-
-  // Only check the relevant title based on language mode
-  const isCorrect = useJapaneseTitle
-    ? currentSong.alternateNames?.[0]?.toLowerCase().trim() === guess
-    : currentSong.title.toLowerCase().trim() === guess;
+  const isCorrect = checkGuess(guessInput.value, currentSong);
 
   guessInput.value = "";
   updateAttempt(isCorrect, currentSong.game, currentSong.game);
@@ -373,5 +408,87 @@ document.getElementById("submitGuess").addEventListener("click", () => {
     showResults(false);
   }
 });
+
+export function initGameFilters() {
+  const filterContainer = document.createElement("div");
+  filterContainer.className = "game-filters";
+  filterContainer.innerHTML = `
+    <button id="toggleFilters" class="filter-toggle">Game Settings</button>
+    <div class="filter-popup hidden">
+      <h3>Select Game Collection</h3>
+      <div class="game-checkboxes">
+        <div class="game-option ${
+          enabledGames.has("Phoenix Wright: Ace Attorney") ? "selected" : ""
+        }" data-collection="trilogy">
+          Phoenix Wright Trilogy
+        </div>
+        <div class="game-option ${
+          enabledGames.has("The Great Ace Attorney Chronicles")
+            ? "selected"
+            : ""
+        }" data-collection="chronicles">
+          The Great Ace Attorney Chronicles
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.querySelector(".theme-selector").after(filterContainer);
+
+  const popup = filterContainer.querySelector(".filter-popup");
+  const toggleBtn = filterContainer.querySelector("#toggleFilters");
+  const gameOptions = filterContainer.querySelectorAll(".game-option");
+
+  toggleBtn.addEventListener("click", () => {
+    popup.classList.toggle("hidden");
+  });
+
+  const trilogyGames = [
+    "Phoenix Wright: Ace Attorney",
+    "Phoenix Wright: Ace Attorney - Justice For All",
+    "Phoenix Wright: Ace Attorney - Trials and Tribulations",
+  ];
+
+  const updateGames = async (option, collection) => {
+    const isSelected = option.classList.toggle("selected");
+
+    if (collection === "trilogy") {
+      trilogyGames.forEach((game) => {
+        if (isSelected) enabledGames.add(game);
+        else enabledGames.delete(game);
+      });
+    } else if (collection === "chronicles") {
+      if (isSelected) enabledGames.add("The Great Ace Attorney Chronicles");
+      else enabledGames.delete("The Great Ace Attorney Chronicles");
+    }
+
+    // Ensure at least one collection is selected
+    if (enabledGames.size === 0) {
+      option.classList.add("selected");
+      if (collection === "trilogy") {
+        trilogyGames.forEach((game) => enabledGames.add(game));
+      } else {
+        enabledGames.add("The Great Ace Attorney Chronicles");
+      }
+    }
+
+    localStorage.setItem("enabledGames", JSON.stringify([...enabledGames]));
+
+    // Reset game state and get a new song
+    await nextSong();
+  };
+
+  gameOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+      updateGames(option, option.dataset.collection);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!filterContainer.contains(e.target)) {
+      popup.classList.add("hidden");
+    }
+  });
+}
 
 export { songList };

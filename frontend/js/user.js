@@ -283,3 +283,56 @@ export async function loadSession() {
   await saveSession(null, null);
   return false;
 }
+
+export async function showUserProfile(username) {
+  try {
+    const [stats, scores] = await Promise.all([
+      getUserStats(username),
+      getUserScore(username),
+    ]);
+
+    const popup = document.getElementById("accountDetails").cloneNode(true);
+    popup.id = "userProfile";
+
+    // Update content
+    popup.querySelector("h3").textContent = username;
+    popup.querySelector("p").textContent = `Score: ${scores.score || 0}`;
+
+    // Update stats
+    if (stats) {
+      popup.querySelector("#gamesPlayed").textContent = stats.gamesPlayed;
+      popup.querySelector("#winRate").textContent = `${
+        Math.round((stats.gamesWon / stats.gamesPlayed) * 100) || 0
+      }%`;
+      popup.querySelector("#currentStreak").textContent = stats.winStreak;
+      popup.querySelector("#bestStreak").textContent = stats.bestStreak;
+
+      // Update distribution
+      const distributionContainer = popup.querySelector("#guessDistribution");
+      // ... (keep existing distribution code)
+    }
+
+    // Remove account actions section
+    const actionsSection = popup.querySelector(".account-actions");
+    if (actionsSection) actionsSection.remove();
+
+    // Add close button
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "Close";
+    closeBtn.onclick = () => {
+      document.getElementById("accountDetailsOverlay").classList.remove("show");
+      popup.remove();
+    };
+    popup.appendChild(closeBtn);
+
+    // Show popup
+    const overlay = document.getElementById("accountDetailsOverlay");
+    overlay.innerHTML = "";
+    overlay.appendChild(popup);
+    overlay.classList.add("show");
+    popup.classList.remove("hidden");
+  } catch (error) {
+    console.error("Failed to load user profile:", error);
+    showMessage("Error", "Failed to load user profile");
+  }
+}

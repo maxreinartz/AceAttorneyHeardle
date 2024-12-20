@@ -212,10 +212,22 @@ function getRandomSong() {
 }
 
 app.get("/api/random-song", async (req, res) => {
-  const song = getRandomSong();
-  if (!song) {
-    return res.status(404).json({ error: "No songs available" });
+  const enabledGames = req.query.games ? JSON.parse(req.query.games) : null;
+
+  // Filter songs based on enabled games
+  let availableSongs = songs;
+  if (enabledGames && enabledGames.length > 0) {
+    availableSongs = songs.filter((song) => enabledGames.includes(song.game));
   }
+
+  if (availableSongs.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "No songs available for selected games" });
+  }
+
+  const song =
+    availableSongs[Math.floor(Math.random() * availableSongs.length)];
 
   const segments = await Promise.all(
     [1, 2, 4, 8, 16].map(async (duration) => {
