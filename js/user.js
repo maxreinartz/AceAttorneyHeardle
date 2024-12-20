@@ -160,6 +160,56 @@ export function initializeAccountUI() {
     }
   });
 
+  // Add profile picture upload handling
+  const profileUpload = document.getElementById("profileUpload");
+  profileUpload.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show loading state
+    const profilePic = document.getElementById("userProfilePic");
+    profilePic.classList.add("loading");
+
+    try {
+      const formData = new FormData();
+      formData.append("profilePic", file);
+      formData.append("username", currentUser);
+
+      console.log("Uploading file:", file.name, "size:", file.size);
+
+      const response = await fetch(`${API_URL}/api/profile-pic`, {
+        method: "POST",
+        headers: {
+          username: localStorage.getItem("user"),
+          hashedpassword: localStorage.getItem("auth"),
+        },
+        body: formData,
+      });
+
+      console.log("Upload response status:", response.status);
+      const data = await response.json();
+      console.log("Upload response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload profile picture");
+      }
+
+      // Update profile picture
+      profilePic.src = `${API_URL}${data.profilePicUrl}`;
+      showMessage("Success", "Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+      showMessage(
+        "Error",
+        `Failed to upload profile picture: ${error.message}`
+      );
+    } finally {
+      profilePic.classList.remove("loading");
+      // Reset the input to allow uploading the same file again
+      profileUpload.value = "";
+    }
+  });
+
   accountDetailsOverlay.addEventListener("click", (e) => {
     if (e.target === accountDetailsOverlay) {
       accountDetailsOverlay.classList.remove("show");

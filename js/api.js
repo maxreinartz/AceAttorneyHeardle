@@ -107,23 +107,28 @@ export async function uploadProfilePicture(username, file) {
   formData.append("profilePic", file);
   formData.append("username", username);
 
-  const headers = {
-    username: localStorage.getItem("user"),
-    hashedPassword: localStorage.getItem("auth"),
-  };
+  console.log("Preparing to upload:", file.name, "size:", file.size);
 
   try {
     const response = await fetch(`${API_URL}/api/profile-pic`, {
       method: "POST",
-      headers,
+      headers: {
+        username: localStorage.getItem("user"),
+        hashedpassword: localStorage.getItem("auth"),
+      },
       body: formData,
       credentials: "include",
     });
+
+    console.log("Upload response status:", response.status);
+    const data = await response.json();
+    console.log("Upload response:", data);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to upload profile picture");
+      throw new Error(data.error || "Failed to upload profile picture");
     }
-    return await response.json();
+
+    return data;
   } catch (error) {
     console.error("Profile picture upload error:", error);
     throw error;
