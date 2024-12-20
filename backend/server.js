@@ -227,14 +227,18 @@ app.get("/api/random-song", async (req, res) => {
     })
   );
 
+  // Add cleanTitle from metadata
+  const metadata = await loadMetadata();
+  const songMetadata = metadata[song.file] || {};
+
   res.json({
     id: song.id,
-    title: song.title,
+    title: songMetadata.cleanTitle || song.title,
     artist: song.artist,
     album: song.album,
     file: song.file,
     game: song.game,
-    alternateNames: song.alternateNames,
+    alternateNames: songMetadata.alternateNames || [],
     category: song.category,
     segments,
   });

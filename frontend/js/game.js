@@ -15,6 +15,7 @@ import { API_URL } from "./config.js";
 let currentSong = null;
 let _currentAttempt = 0;
 let songList = [];
+let useJapaneseTitle = false;
 
 // Export currentSong as a getter to ensure it's always current
 export const getCurrentSong = () => currentSong;
@@ -23,9 +24,35 @@ export const setCurrentAttempt = (value) => {
   _currentAttempt = value;
 };
 
+export function setTitleMode(isJapanese) {
+  useJapaneseTitle = isJapanese;
+  localStorage.setItem("useJapaneseTitle", isJapanese);
+
+  const input = document.getElementById("guessInput");
+  const currentSong = getCurrentSong();
+  if (currentSong) {
+    input.placeholder =
+      isJapanese && currentSong.alternateNames?.[0]
+        ? "Enter Japanese title..."
+        : "Enter English title...";
+  }
+}
+
+export function checkGuess(input, song) {
+  const cleanGuess = input.toLowerCase().trim();
+  if (useJapaneseTitle) {
+    const altName = song.alternateNames?.[0]?.toLowerCase().trim();
+    return altName && cleanGuess === altName;
+  } else {
+    const cleanTitle = song.title.toLowerCase().trim();
+    return cleanGuess === cleanTitle;
+  }
+}
+
 export async function initGame() {
   initTheme();
   initLivesDisplay();
+  initTitleModeButtons();
   try {
     const playButton = document.getElementById("playButton");
     const skipButton = document.getElementById("skipButton");
@@ -95,13 +122,28 @@ async function setupSongSuggestions() {
     }
 
     const matches = songList
-      .filter((song) => song.title.toLowerCase().includes(value.toLowerCase()))
+      .filter((song) => {
+        const searchValue = value.toLowerCase();
+        if (useJapaneseTitle) {
+          const altName = song.alternateNames?.[0]?.toLowerCase();
+          return altName && altName.includes(searchValue);
+        } else {
+          return song.title.toLowerCase().includes(searchValue);
+        }
+      })
       .slice(0, 15);
 
     if (matches.length > 0) {
       container.style.display = "block";
       container.innerHTML = matches
-        .map((song) => `<div class="song-suggestion">${song.title}</div>`)
+        .map((song) => {
+          const displayTitle = useJapaneseTitle
+            ? song.alternateNames?.[0]
+            : song.title;
+          return `<div class="song-suggestion">
+            <div class="song-title">${displayTitle}</div>
+          </div>`;
+        })
         .join("");
     } else {
       container.style.display = "none";
@@ -117,8 +159,9 @@ async function setupSongSuggestions() {
   });
 
   container.addEventListener("click", (e) => {
-    if (e.target.classList.contains("song-suggestion")) {
-      input.value = e.target.textContent;
+    const suggestionEl = e.target.closest(".song-suggestion");
+    if (suggestionEl) {
+      input.value = suggestionEl.querySelector(".song-title").textContent;
       container.style.display = "none";
     }
   });
@@ -200,6 +243,8 @@ export async function playSegment() {
 
 export function showObjection() {
   const objection = document.getElementById("objection");
+  if (!objection) return;
+
   objection.classList.remove("hidden");
   objection.classList.add("show");
   setTimeout(() => {
@@ -209,25 +254,31 @@ export function showObjection() {
 }
 
 export function updateAttempt(isCorrect, guessedGame, actualGame) {
+  const currentAttempt = getCurrentAttempt();
+  if (currentAttempt >= 5) return;
+
   const attempts = document.querySelectorAll(".lives-display .attempt");
-  const attempt = getCurrentAttempt();
-  const currentAttemptEl = attempts[attempt];
+  const currentAttemptEl = attempts[currentAttempt];
 
-  if (!currentAttemptEl.classList.contains("skipped")) {
-    // Reset any existing game-related classes
-    currentAttemptEl.classList.remove("correct-game", "wrong-game");
-
-    // Add correct/wrong class for the song guess
-    currentAttemptEl.classList.add(isCorrect ? "correct" : "wrong");
-
-    // Add game match/mismatch indicator if we have both games to compare
-    if (guessedGame && actualGame) {
-      currentAttemptEl.classList.add(
-        guessedGame === actualGame ? "correct-game" : "wrong-game"
-      );
-    }
+  if (
+    !currentAttemptEl ||
+    currentAttemptEl.classList.contains("correct") ||
+    currentAttemptEl.classList.contains("wrong") ||
+    currentAttemptEl.classList.contains("skipped")
+  ) {
+    return;
   }
-  setCurrentAttempt(attempt + 1);
+
+  currentAttemptEl.classList.remove("correct-game", "wrong-game");
+  currentAttemptEl.classList.add(isCorrect ? "correct" : "wrong");
+
+  if (guessedGame && actualGame) {
+    currentAttemptEl.classList.add(
+      guessedGame === actualGame ? "correct-game" : "wrong-game"
+    );
+  }
+
+  setCurrentAttempt(currentAttempt + 1);
 }
 
 export async function showResults(won = true) {
@@ -265,5 +316,62 @@ export async function showResults(won = true) {
     }
   }
 }
+
+export function initTitleModeButtons() {
+  const englishMode = document.getElementById("englishMode");
+  const japaneseMode = document.getElementById("japaneseMode");
+
+  const savedMode = localStorage.getItem("useJapaneseTitle") === "true";
+  setTitleMode(savedMode);
+  if (savedMode) {
+    japaneseMode.classList.add("active");
+    englishMode.classList.remove("active");
+  } else {
+    englishMode.classList.add("active");
+    japaneseMode.classList.remove("active");
+  }
+
+  englishMode.addEventListener("click", () => {
+    englishMode.classList.add("active");
+    japaneseMode.classList.remove("active");
+    setTitleMode(false);
+  });
+
+  japaneseMode.addEventListener("click", () => {
+    japaneseMode.classList.add("active");
+    englishMode.classList.remove("active");
+    setTitleMode(true);
+  });
+}
+
+document.getElementById("submitGuess").addEventListener("click", () => {
+  const guessInput = document.getElementById("guessInput");
+  const guess = guessInput.value.toLowerCase().trim();
+  const currentSong = getCurrentSong();
+
+  if (!guess || !currentSong || getCurrentAttempt() >= 5) return;
+
+  // Get list of all valid titles for the current song
+  const validTitles = [currentSong.title.toLowerCase().trim()];
+
+  if (currentSong.alternateNames?.[0]) {
+    validTitles.push(currentSong.alternateNames[0].toLowerCase().trim());
+  }
+
+  // Only check the relevant title based on language mode
+  const isCorrect = useJapaneseTitle
+    ? currentSong.alternateNames?.[0]?.toLowerCase().trim() === guess
+    : currentSong.title.toLowerCase().trim() === guess;
+
+  guessInput.value = "";
+  updateAttempt(isCorrect, currentSong.game, currentSong.game);
+
+  if (isCorrect) {
+    showObjection();
+    setTimeout(() => showResults(true), 2500);
+  } else if (getCurrentAttempt() >= 5) {
+    showResults(false);
+  }
+});
 
 export { songList };
