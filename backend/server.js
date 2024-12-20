@@ -23,35 +23,28 @@ const allowedOrigins = [
   "http://127.0.0.1:7689",
   "http://localhost:7689",
   "https://aceattorneyheardle.maxreinartz.me",
+  "https://backend.aceattorneyheardle.maxreinartz.me",
 ];
 
 const app = express();
 
-// Update CORS configuration
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, username, hashedpassword"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
 
-  // Handle preflight
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-// Remove the existing cors middleware
-// app.use(cors({ ... })); // Remove this
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg =
+          "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "username", "hashedpassword"],
+  })
+);
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -570,11 +563,6 @@ app.get("/api/search-users", async (req, res) => {
     console.error("Search error:", error);
     res.status(500).json({ error: "Failed to search users" });
   }
-});
-
-// Add health check endpoint
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
 });
 
 const PORT = 7688;
