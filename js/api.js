@@ -169,9 +169,14 @@ export async function signupUser(username) {
   }
 }
 
-export async function getRandomSong() {
+export async function getRandomSong(enabledGames = null) {
   try {
-    const response = await fetch(`${API_URL}/api/random-song`);
+    const url = enabledGames
+      ? `${API_URL}/api/random-song?games=${encodeURIComponent(
+          JSON.stringify(enabledGames)
+        )}`
+      : `${API_URL}/api/random-song`;
+    const response = await fetch(url);
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || "Failed to get random song");

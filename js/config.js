@@ -1,1 +1,1 @@
-export const API_URL = "https://backend.aceattorneyheardle.maxreinartz.me";
+export const API_URL = "http://127.0.0.1:7688";
