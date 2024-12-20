@@ -56,6 +56,7 @@ const audioCache = new Map();
 const USERS_FILE = path.join(__dirname, "data", "users.json");
 const SCORES_FILE = path.join(__dirname, "data", "scores.json");
 const STATS_FILE = path.join(__dirname, "data", "stats.json");
+const METADATA_FILE = path.join(__dirname, "songs", "metadata.json");
 
 async function initDataFiles() {
   try {
@@ -118,10 +119,22 @@ async function saveStats(stats) {
   await fs.writeFile(STATS_FILE, JSON.stringify(stats, null, 2));
 }
 
+async function loadMetadata() {
+  try {
+    const data = await fs.readFile(METADATA_FILE, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error loading metadata:", error);
+    return {};
+  }
+}
+
 async function loadSongs() {
   try {
     const songDir = path.join(__dirname, "songs");
     const files = await fs.readdir(songDir);
+    const metadata = await loadMetadata();
+
     const mp3Files = files.filter(
       (file) => file.endsWith(".mp3") && !BLACKLISTED_SONGS.includes(file)
     );
@@ -129,13 +142,18 @@ async function loadSongs() {
     songs = await Promise.all(
       mp3Files.map(async (file, index) => {
         const filePath = path.join(songDir, file);
-        const metadata = await mm.parseFile(filePath);
+        const songMetadata = metadata[file] || {};
+        const audioMetadata = await mm.parseFile(filePath);
+
         return {
           id: index + 1,
-          title: metadata.common.title || file.replace(".mp3", ""),
+          title: audioMetadata.common.title || file.replace(".mp3", ""),
           file: file,
-          artist: metadata.common.artist || "Unknown",
-          album: metadata.common.album || "Unknown",
+          artist: audioMetadata.common.artist || "Unknown",
+          album: audioMetadata.common.album || "Unknown",
+          game: songMetadata.game || "Unknown Game",
+          alternateNames: songMetadata.alternateNames || [],
+          category: songMetadata.category || "Other",
         };
       })
     );
@@ -198,6 +216,9 @@ app.get("/api/random-song", async (req, res) => {
     artist: song.artist,
     album: song.album,
     file: song.file,
+    game: song.game,
+    alternateNames: song.alternateNames,
+    category: song.category,
     segments,
   });
 });
@@ -210,6 +231,9 @@ app.get("/api/songs", (req, res) => {
       artist: song.artist,
       album: song.album,
       file: song.file,
+      game: song.game,
+      alternateNames: song.alternateNames,
+      category: song.category,
     }))
   );
 });
