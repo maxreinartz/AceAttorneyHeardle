@@ -133,26 +133,6 @@ function initializeEventListeners() {
     }
   });
 
-  document.getElementById("submitGuess").addEventListener("click", () => {
-    const guess = document.getElementById("guessInput").value;
-    const currentSong = getCurrentSong();
-    const isCorrect = guess.toLowerCase() === currentSong.title.toLowerCase();
-
-    // Find the guessed song in songList to get its game
-    const guessedSong = songList.find(
-      (song) => song.title.toLowerCase() === guess.toLowerCase()
-    );
-
-    showObjection();
-    updateAttempt(isCorrect, guessedSong?.game, currentSong.game);
-
-    if (isCorrect) {
-      setTimeout(() => showResults(true), 2500);
-    } else if (getCurrentAttempt() >= 5) {
-      showResults(false);
-    }
-  });
-
   // Logout handler
   document
     .getElementById("logoutButton")
@@ -274,6 +254,40 @@ function initializeEventListeners() {
 }
 
 // ...existing code...
+
+const updateSuggestions = (value) => {
+  if (!value || value.length < 2) {
+    container.style.display = "none";
+    return;
+  }
+
+  const matches = songList
+    .filter((song) => {
+      const cleanTitle = song.title.toLowerCase();
+      const altName = song.alternateNames?.[0]?.toLowerCase();
+      const searchValue = value.toLowerCase();
+      return (
+        cleanTitle.includes(searchValue) ||
+        (altName && altName.includes(searchValue))
+      );
+    })
+    .slice(0, 15);
+
+  if (matches.length > 0) {
+    container.style.display = "block";
+    container.innerHTML = matches
+      .map((song) => {
+        const altName = song.alternateNames?.[0];
+        return `<div class="song-suggestion">
+          <div class="song-title">${song.title}</div>
+          ${altName ? `<div class="song-alt-name">${altName}</div>` : ""}
+        </div>`;
+      })
+      .join("");
+  } else {
+    container.style.display = "none";
+  }
+};
 
 async function initializeApp() {
   try {
