@@ -371,14 +371,12 @@ app.post("/api/score", authenticateUser, async (req, res) => {
     };
   }
 
-  // Update stats
   stats[username].gamesPlayed++;
   stats[username].totalAttempts += attempt;
   stats[username].averageAttempts =
     stats[username].totalAttempts / stats[username].gamesPlayed;
   stats[username].lastPlayed = new Date().toISOString();
 
-  // Update score and win/loss stats
   if (!scores[username]) scores[username] = 0;
 
   if (success) {
@@ -391,11 +389,10 @@ app.post("/api/score", authenticateUser, async (req, res) => {
     stats[username].distribution[attempt - 1]++;
     scores[username] += Math.max(6 - attempt, 0);
   } else {
-    stats[username].gamesLost++; // Increment losses
+    stats[username].gamesLost++;
     stats[username].winStreak = 0;
-    scores[username] = Math.max(0, scores[username] - 3); // Always subtract 3 for any loss
+    scores[username] = Math.max(0, scores[username] - 3);
 
-    // Only update distribution for normal gameplay losses, not refreshes
     if (attempt < 5) {
       stats[username].distribution[attempt]++;
     }
