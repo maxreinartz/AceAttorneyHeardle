@@ -461,10 +461,15 @@ document.getElementById("submitGuess").addEventListener("click", () => {
 });
 
 export function initGameFilters() {
+  // Check if container already exists and remove it
+  const existingContainer = document.querySelector(".game-filters");
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
   const filterContainer = document.createElement("div");
   filterContainer.className = "game-filters";
   filterContainer.innerHTML = `
-    <button id="toggleFilters" class="filter-toggle">Game Settings</button>
     <div class="filter-popup hidden">
       <h3>Select Game Collection</h3>
       <div class="game-checkboxes">
@@ -487,12 +492,15 @@ export function initGameFilters() {
   document.querySelector(".theme-selector").after(filterContainer);
 
   const popup = filterContainer.querySelector(".filter-popup");
-  const toggleBtn = filterContainer.querySelector("#toggleFilters");
+  const mobileToggleBtn = document.getElementById("mobileToggleFilters");
   const gameOptions = filterContainer.querySelectorAll(".game-option");
 
-  toggleBtn.addEventListener("click", () => {
+  const handleFilterClick = (e) => {
+    e.stopPropagation();
     popup.classList.toggle("hidden");
-  });
+  };
+
+  mobileToggleBtn?.addEventListener("click", handleFilterClick);
 
   const trilogyGames = [
     "Phoenix Wright: Ace Attorney",
