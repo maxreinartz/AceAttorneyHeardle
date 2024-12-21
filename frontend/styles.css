@@ -2184,7 +2184,7 @@ footer a:hover {
 
 .title-mode-toggle.desktop-only {
   position: fixed;
-  right: 20px;
+  right: 10px;
   bottom: 0;
   height: fit-content;
   display: flex;
@@ -2224,5 +2224,17 @@ footer a:hover {
   .mobile-nav-container .title-mode-toggle {
     position: static;
     transform: none;
+  }
+}
+
+.track-list-container #showTrackList {
+  position: fixed;
+  right: 10px;
+  bottom: 70px;
+}
+
+@media (max-width: 768px) {
+  #showTrackList.desktop-only {
+    display: none;
   }
 }
