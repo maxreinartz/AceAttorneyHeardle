@@ -1,3 +1,4 @@
+import { showMessage } from "./utils.js";
 import {
   getAudio,
   setAudio,
@@ -10,7 +11,7 @@ import {
 import { updateLeaderboard } from "./leaderboard.js";
 import { currentUser, updateUserScore, checkAuthentication } from "./user.js";
 import { getRandomSong, getSongList, updateScore } from "./api.js";
-import { API_URL } from "./config.js";
+import { API_URL, FEATURES } from "./config.js";
 
 const games = [
   "Phoenix Wright: Ace Attorney",
@@ -627,7 +628,7 @@ async function initTrackList() {
       <div class="song-items">
         ${songs
           .map(
-            (song) => `<div class="song-item">
+            (song) => `<div class="song-item" data-file="${song.file}">
               ${
                 isJapanese && song.alternateNames?.[0]
                   ? song.alternateNames[0]
@@ -642,7 +643,51 @@ async function initTrackList() {
     gameList.classList.add("hidden");
     songList.classList.remove("hidden");
 
+    // Add click handlers for songs
+    const songItems = songList.querySelectorAll(".song-item");
+    let currentlyPlaying = null;
+
+    songItems.forEach((item) => {
+      item.addEventListener("click", async () => {
+        if (!FEATURES.TRACKLIST_PLAYBACK) {
+          // showMessage("Feature Disabled", "Song preview is currently disabled");
+          return;
+        }
+
+        const file = item.dataset.file;
+        const audio = getAudio();
+
+        // Stop current playback if clicking same song
+        if (currentlyPlaying === item) {
+          audio.pause();
+          audio.src = "";
+          currentlyPlaying.classList.remove("playing");
+          currentlyPlaying = null;
+          return;
+        }
+
+        // Play the new song
+        try {
+          audio.src = `${API_URL}/songs/${file}`;
+          await audio.play();
+          item.classList.add("playing");
+          currentlyPlaying = item;
+
+          // Remove playing state when song ends
+          audio.onended = () => {
+            item.classList.remove("playing");
+            currentlyPlaying = null;
+          };
+        } catch (error) {
+          console.error("Failed to play song:", error);
+        }
+      });
+    });
+
     songList.querySelector(".back-button").addEventListener("click", () => {
+      const audio = getAudio();
+      audio.pause();
+      audio.src = "";
       songList.classList.add("hidden");
       gameList.classList.remove("hidden");
     });
