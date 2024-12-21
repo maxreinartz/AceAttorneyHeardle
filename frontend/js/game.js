@@ -315,13 +315,22 @@ export function updateAttempt(isCorrect, guessedGame, actualGame) {
     return;
   }
 
-  currentAttemptEl.classList.remove("correct-game", "wrong-game");
+  // Remove any existing class first
+  currentAttemptEl.classList.remove(
+    "correct",
+    "wrong",
+    "skipped",
+    "correct-game",
+    "wrong-game"
+  );
+
+  // Add the result class
   currentAttemptEl.classList.add(isCorrect ? "correct" : "wrong");
 
+  // Add game match class if we have both games to compare
   if (guessedGame && actualGame) {
-    currentAttemptEl.classList.add(
-      guessedGame === actualGame ? "correct-game" : "wrong-game"
-    );
+    const isGameMatch = guessedGame === actualGame;
+    currentAttemptEl.classList.add(isGameMatch ? "correct-game" : "wrong-game");
   }
 
   setCurrentAttempt(currentAttempt + 1);
@@ -396,10 +405,30 @@ document.getElementById("submitGuess").addEventListener("click", () => {
 
   if (!guessInput.value || !currentSong || getCurrentAttempt() >= 5) return;
 
+  // Find the matching song from the full song list to get its game
+  const guessedSong = songList.find((song) => {
+    const normalizeString = (str) =>
+      str
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s]/g, "")
+        .replace(/\s+/g, " ");
+    const cleanGuess = normalizeString(guessInput.value);
+    const cleanTitle = normalizeString(song.title);
+    const cleanAltName = song.alternateNames?.[0]
+      ? normalizeString(song.alternateNames[0])
+      : "";
+
+    return useJapaneseTitle
+      ? cleanAltName && cleanGuess === cleanAltName
+      : cleanGuess === cleanTitle;
+  });
+
   const isCorrect = checkGuess(guessInput.value, currentSong);
+  const guessedGame = guessedSong?.game || null;
 
   guessInput.value = "";
-  updateAttempt(isCorrect, currentSong.game, currentSong.game);
+  updateAttempt(isCorrect, guessedGame, currentSong.game);
 
   if (isCorrect) {
     showObjection();
