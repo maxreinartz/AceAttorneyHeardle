@@ -115,7 +115,7 @@ h1 {
     position: fixed;
     top: 0.5rem;
     right: 1rem;
-    z-index: 91;
+    z-index: 3;
   }
 
   .mobile-nav-container {
@@ -651,7 +651,7 @@ input {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
-  height: 2.4rem; /* Fixed height for consistent spacing */
+  height: 2.4rem;
 }
 
 .leaderboard-item:first-child {
@@ -1455,7 +1455,7 @@ footer a:hover {
     position: fixed;
     top: 0.5rem;
     right: 0.5rem;
-    z-index: 2;
+    z-index: 3;
   }
 
   .account-button {
@@ -1538,7 +1538,7 @@ footer a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  z-index: 90;
+  z-index: 3;
   padding-top: 1rem;
 }
 
@@ -1568,7 +1568,7 @@ footer a:hover {
   .leaderboard {
     position: fixed;
     left: 1rem;
-    top: calc(0.5rem + 140px); /* Adjusted spacing from top buttons */
+    top: calc(0.5rem + 140px);
   }
 }
 
@@ -1587,7 +1587,7 @@ footer a:hover {
     right: 0;
     background: var(--card-bg);
     padding: 1rem;
-    z-index: 90;
+    z-index: 3;
     box-shadow: var(--shadow);
   }
 
@@ -1655,7 +1655,7 @@ footer a:hover {
     position: fixed;
     top: 0.5rem;
     right: 0.5rem;
-    z-index: 91;
+    z-index: 3;
   }
 
   .mobile-nav-container {
@@ -1690,7 +1690,7 @@ footer a:hover {
   right: 1rem;
   display: flex;
   gap: 0.5rem;
-  z-index: 90;
+  z-index: 3;
   padding: 0.5rem;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
@@ -1730,7 +1730,7 @@ footer a:hover {
   position: absolute;
   top: 62px;
   right: 10px;
-  z-index: 91;
+  z-index: 3;
 }
 
 .filter-toggle {
@@ -1844,4 +1844,202 @@ footer a:hover {
 
 #userProfile .close-button:hover {
   background: var(--button-hover);
+}
+
+.track-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.track-list .game-header {
+  font-weight: bold;
+  color: var(--accent-color);
+  margin: 1rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--accent-color);
+}
+
+.track-list .track-item {
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.track-list-container {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1rem;
+  z-index: 5;
+}
+
+.track-list-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  width: 80%;
+  height: 80%;
+  max-width: 80vw;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--accent-color);
+  z-index: 10000;
+  backdrop-filter: blur(10px);
+}
+
+.track-list-popup.hidden {
+  display: none;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .track-list-container {
+    bottom: 6rem;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .track-list-popup {
+    width: 95%;
+    height: 90%;
+    max-width: none;
+  }
+}
+
+.track-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.track-list-header h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.track-list-controls {
+  margin-right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.game-list,
+.song-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-right: -1rem;
+  padding-right: 1rem;
+}
+
+.game-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.game-item {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-item:hover {
+  background: rgba(255, 68, 68, 0.1);
+  transform: translateX(10px);
+  box-shadow: var(--shadow);
+}
+
+.song-count {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.track-list-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 4;
+  display: none;
+}
+
+.track-list-overlay.show {
+  display: block;
+}
+
+/* Update mobile styles */
+@media (max-width: 768px) {
+  .track-list-popup {
+    width: 95%;
+    height: 90%;
+    max-width: none;
+  }
+}
+
+.song-list-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--accent-color);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.song-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.song-item {
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.track-list-popup .track-list-header,
+.track-list-popup .game-list,
+.track-list-popup .song-list {
+  position: relative;
+  z-index: 5;
+}
+
+@media (max-width: 768px) {
+  .track-list-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .track-list-popup {
+    width: 95vw;
+    max-height: 80vh;
+  }
 }
