@@ -518,6 +518,160 @@ export function initGameFilters() {
       popup.classList.add("hidden");
     }
   });
+
+  // Initialize the new track list
+  initTrackList();
+}
+
+async function initTrackList() {
+  const trackListContainer = document.createElement("div");
+  trackListContainer.className = "track-list-container";
+  document.body.appendChild(trackListContainer);
+
+  // Add overlay div
+  const overlay = document.createElement("div");
+  overlay.className = "track-list-overlay";
+  document.body.appendChild(overlay);
+
+  trackListContainer.innerHTML = `
+    <button id="showTrackList" class="filter-toggle">View Track List</button>
+    <div class="track-list-popup hidden" id="trackListPopup">
+      <div class="track-list-header">
+        <h3>Game Soundtracks</h3>
+        <div class="track-list-controls">
+          <button id="trackListEnglish" class="mode-button active">English</button>
+          <button id="trackListJapanese" class="mode-button">Japanese</button>
+        </div>
+        <button class="close-button">×</button>
+      </div>
+      <div class="game-list"></div>
+      <div class="song-list hidden"></div>
+    </div>
+  `;
+
+  const popup = trackListContainer.querySelector(".track-list-popup");
+  const showTrackListBtn = document.getElementById("showTrackList");
+
+  showTrackListBtn.addEventListener("click", async (e) => {
+    if (popup.classList.contains("hidden")) {
+      popup.classList.remove("hidden");
+      overlay.classList.add("show");
+      try {
+        const songs = await getSongList();
+        const gameMap = new Map();
+
+        songs.forEach((song) => {
+          if (!gameMap.has(song.game)) {
+            gameMap.set(song.game, []);
+          }
+          gameMap.get(song.game).push(song);
+        });
+
+        gameList.innerHTML = `
+          <div class="game-items">
+            ${Array.from(gameMap.keys())
+              .map(
+                (game) => `<div class="game-item" data-game="${game}">
+                  ${game}
+                  <span class="song-count">${
+                    gameMap.get(game).length
+                  } tracks</span>
+                </div>`
+              )
+              .join("")}
+          </div>
+        `;
+
+        gameList.querySelectorAll(".game-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const game = item.dataset.game;
+            currentGame = game;
+            currentGameSongs = gameMap.get(game);
+            displaySongs(currentGameSongs, game);
+          });
+        });
+      } catch (error) {
+        console.error("Failed to load track list:", error);
+        gameList.innerHTML = '<p class="error">Failed to load track list</p>';
+      }
+    } else {
+      closeTrackList();
+    }
+    e.stopPropagation(); // Prevent event from reaching document click handler
+  });
+
+  function closeTrackList() {
+    popup.classList.add("hidden");
+    overlay.classList.remove("show");
+  }
+
+  const closeBtn = popup.querySelector(".close-button");
+  closeBtn.addEventListener("click", closeTrackList);
+
+  overlay.addEventListener("click", closeTrackList);
+
+  // Stop propagation of clicks inside popup
+  popup.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  let currentGame = null;
+  let currentGameSongs = null;
+
+  const displaySongs = (songs, game) => {
+    songList.innerHTML = `
+      <div class="song-list-header">
+        <button class="back-button">← Back</button>
+        <h3>${game}</h3>
+      </div>
+      <div class="song-items">
+        ${songs
+          .map(
+            (song) => `<div class="song-item">
+              ${
+                isJapanese && song.alternateNames?.[0]
+                  ? song.alternateNames[0]
+                  : song.title
+              }
+            </div>`
+          )
+          .join("")}
+      </div>
+    `;
+
+    gameList.classList.add("hidden");
+    songList.classList.remove("hidden");
+
+    songList.querySelector(".back-button").addEventListener("click", () => {
+      songList.classList.add("hidden");
+      gameList.classList.remove("hidden");
+    });
+  };
+
+  const gameList = popup.querySelector(".game-list");
+  const songList = popup.querySelector(".song-list");
+  const englishBtn = document.getElementById("trackListEnglish");
+  const japaneseBtn = document.getElementById("trackListJapanese");
+  let isJapanese = false;
+
+  // Language toggle handlers
+  englishBtn.addEventListener("click", () => {
+    isJapanese = false;
+    englishBtn.classList.add("active");
+    japaneseBtn.classList.remove("active");
+    if (!songList.classList.contains("hidden")) {
+      displaySongs(currentGameSongs, currentGame);
+    }
+  });
+
+  japaneseBtn.addEventListener("click", () => {
+    isJapanese = true;
+    japaneseBtn.classList.add("active");
+    englishBtn.classList.remove("active");
+    if (!songList.classList.contains("hidden")) {
+      displaySongs(currentGameSongs, currentGame);
+    }
+  });
 }
 
 export { songList };
