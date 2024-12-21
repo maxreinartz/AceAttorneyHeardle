@@ -376,27 +376,48 @@ export async function showResults(won = true) {
 export function initTitleModeButtons() {
   const englishMode = document.getElementById("englishMode");
   const japaneseMode = document.getElementById("japaneseMode");
+  const mobileEnglishMode = document.getElementById("mobileEnglishMode");
+  const mobileJapaneseMode = document.getElementById("mobileJapaneseMode");
 
   const savedMode = localStorage.getItem("useJapaneseTitle") === "true";
   setTitleMode(savedMode);
-  if (savedMode) {
-    japaneseMode.classList.add("active");
-    englishMode.classList.remove("active");
-  } else {
-    englishMode.classList.add("active");
-    japaneseMode.classList.remove("active");
+
+  function updateButtons(isJapanese) {
+    if (isJapanese) {
+      japaneseMode?.classList.add("active");
+      englishMode?.classList.remove("active");
+      mobileJapaneseMode?.classList.add("active");
+      mobileEnglishMode?.classList.remove("active");
+    } else {
+      englishMode?.classList.add("active");
+      japaneseMode?.classList.remove("active");
+      mobileEnglishMode?.classList.add("active");
+      mobileJapaneseMode?.classList.remove("active");
+    }
   }
 
-  englishMode.addEventListener("click", () => {
-    englishMode.classList.add("active");
-    japaneseMode.classList.remove("active");
+  updateButtons(savedMode);
+
+  // Desktop handlers
+  englishMode?.addEventListener("click", () => {
     setTitleMode(false);
+    updateButtons(false);
   });
 
-  japaneseMode.addEventListener("click", () => {
-    japaneseMode.classList.add("active");
-    englishMode.classList.remove("active");
+  japaneseMode?.addEventListener("click", () => {
     setTitleMode(true);
+    updateButtons(true);
+  });
+
+  // Mobile handlers
+  mobileEnglishMode?.addEventListener("click", () => {
+    setTitleMode(false);
+    updateButtons(false);
+  });
+
+  mobileJapaneseMode?.addEventListener("click", () => {
+    setTitleMode(true);
+    updateButtons(true);
   });
 }
 
@@ -524,18 +545,20 @@ export function initGameFilters() {
   initTrackList();
 }
 
+// Update track list initialization to handle mobile button
 async function initTrackList() {
   const trackListContainer = document.createElement("div");
   trackListContainer.className = "track-list-container";
   document.body.appendChild(trackListContainer);
 
-  // Add overlay div
+  // Create overlay first
   const overlay = document.createElement("div");
   overlay.className = "track-list-overlay";
   document.body.appendChild(overlay);
 
+  // Rest of initialization
   trackListContainer.innerHTML = `
-    <button id="showTrackList" class="filter-toggle">View Track List</button>
+    <button id="showTrackList" class="filter-toggle desktop-only">View Track List</button>
     <div class="track-list-popup hidden" id="trackListPopup">
       <div class="track-list-header">
         <h3>Game Soundtracks</h3>
@@ -552,8 +575,9 @@ async function initTrackList() {
 
   const popup = trackListContainer.querySelector(".track-list-popup");
   const showTrackListBtn = document.getElementById("showTrackList");
+  const mobileShowTrackListBtn = document.getElementById("mobileShowTrackList");
 
-  showTrackListBtn.addEventListener("click", async (e) => {
+  const handleTrackListClick = async (e) => {
     if (popup.classList.contains("hidden")) {
       popup.classList.remove("hidden");
       overlay.classList.add("show");
@@ -599,7 +623,11 @@ async function initTrackList() {
       closeTrackList();
     }
     e.stopPropagation(); // Prevent event from reaching document click handler
-  });
+  };
+
+  // Add click handlers to both desktop and mobile buttons
+  showTrackListBtn?.addEventListener("click", handleTrackListClick);
+  mobileShowTrackListBtn?.addEventListener("click", handleTrackListClick);
 
   function closeTrackList() {
     popup.classList.add("hidden");

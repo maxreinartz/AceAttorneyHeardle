@@ -33,20 +33,43 @@
       <button onclick="setTheme('simple-dark')">Dark</button>
     </div>
 
+    <!-- Language Selector - visible on desktop -->
+    <div class="title-mode-toggle desktop-only">
+      <button id="englishMode" class="mode-button active">English Title</button>
+      <button id="japaneseMode" class="mode-button">Japanese Title</button>
+    </div>
+
     <!-- Mobile Navigation -->
     <div class="mobile-nav-container">
-      <div class="theme-selector">
-        <button onclick="setTheme('court')">Court</button>
-        <button onclick="setTheme('simple-light')">Light</button>
-        <button onclick="setTheme('simple-dark')">Dark</button>
+      <!-- First row -->
+      <div class="mobile-nav-row">
+        <button id="mobileAccountButton" class="account-button">
+          <span id="mobileAccountUsername">Account</span>
+          <span id="mobileAccountScore" class="account-score hidden"></span>
+        </button>
+        <button id="mobileSearchButton" class="search-button">
+          Search Players
+        </button>
       </div>
-      <button id="mobileAccountButton" class="account-button">
-        <span id="mobileAccountUsername">Account</span>
-        <span id="mobileAccountScore" class="account-score hidden"></span>
-      </button>
-      <button id="mobileSearchButton" class="search-button">
-        Search Players
-      </button>
+      <!-- Second row -->
+      <div class="mobile-nav-row">
+        <div class="theme-selector">
+          <button onclick="setTheme('court')">Court</button>
+          <button onclick="setTheme('simple-light')">Light</button>
+          <button onclick="setTheme('simple-dark')">Dark</button>
+        </div>
+      </div>
+      <!-- Third row -->
+      <div class="mobile-nav-row">
+        <div class="title-mode-toggle">
+          <button id="mobileEnglishMode" class="mode-button active">
+            English Title
+          </button>
+          <button id="mobileJapaneseMode" class="mode-button">
+            Japanese Title
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="account-details-overlay" id="accountDetailsOverlay">
@@ -276,10 +299,5 @@
     </footer>
 
     <script src="js/index.js" type="module"></script>
-
-    <div class="title-mode-toggle">
-      <button id="englishMode" class="mode-button active">English Title</button>
-      <button id="japaneseMode" class="mode-button">Japanese Title</button>
-    </div>
   </body>
 </html>
