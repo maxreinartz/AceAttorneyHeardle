@@ -27,6 +27,8 @@ import {
   deleteAccount,
   verifySession,
   updateScore,
+  getUserScore,
+  getUserStats,
 } from "./api.js";
 import { showMessage } from "./utils.js";
 import { API_URL } from "./config.js";
@@ -215,13 +217,7 @@ function initializeEventListeners() {
             <img src="${user.profilePic || "assets/img/default-avatar.png"}" 
                  alt="${user.username}'s avatar"
                  onerror="this.src='assets/img/default-avatar.png'">
-            <div class="user-info">
-              <div class="username">${user.username}</div>
-              <div class="stats">
-                Score: ${user.score} • Games: ${user.stats.gamesPlayed} • 
-                Wins: ${user.stats.gamesWon} • Streak: ${user.stats.winStreak}
-              </div>
-            </div>
+            <div class="username">${user.username}</div>
           </div>
         `
           )
@@ -244,14 +240,27 @@ function initializeEventListeners() {
     }
   });
 
-  // Add click handler for leaderboard items
+  // Update leaderboard click handler to be simpler
   document.getElementById("leaderboardList").addEventListener("click", (e) => {
     const leaderboardItem = e.target.closest(".leaderboard-item");
     if (leaderboardItem) {
-      const username = leaderboardItem.querySelector(
+      const usernameSpan = leaderboardItem.querySelector(
         ".leaderboard-user span"
-      ).textContent;
-      showUserProfile(username);
+      );
+      if (usernameSpan) {
+        // Remove the ranking number from the username
+        const username = usernameSpan.textContent
+          .trim()
+          .replace(/^\d+\.\s*/, "");
+        if (username) {
+          if (!currentUser) {
+            showMessage("Error", "Please log in to view profiles");
+            document.getElementById("accountModal").classList.add("show");
+            return;
+          }
+          showUserProfile(username);
+        }
+      }
     }
   });
 
@@ -275,45 +284,9 @@ function initializeEventListeners() {
     });
 }
 
-// ...existing code...
-
-const updateSuggestions = (value) => {
-  if (!value || value.length < 2) {
-    container.style.display = "none";
-    return;
-  }
-
-  const matches = songList
-    .filter((song) => {
-      const cleanTitle = song.title.toLowerCase();
-      const altName = song.alternateNames?.[0]?.toLowerCase();
-      const searchValue = value.toLowerCase();
-      return (
-        cleanTitle.includes(searchValue) ||
-        (altName && altName.includes(searchValue))
-      );
-    })
-    .slice(0, 15);
-
-  if (matches.length > 0) {
-    container.style.display = "block";
-    container.innerHTML = matches
-      .map((song) => {
-        const altName = song.alternateNames?.[0];
-        return `<div class="song-suggestion">
-          <div class="song-title">${song.title}</div>
-          ${altName ? `<div class="song-alt-name">${altName}</div>` : ""}
-        </div>`;
-      })
-      .join("");
-  } else {
-    container.style.display = "none";
-  }
-};
-
 async function initializeApp() {
   try {
-    await loadSession(); // Load session first
+    await loadSession(); // Load session first 
     initializeAccountUI(); // Then initialize UI
     initializeEventListeners(); // Then event listeners
 

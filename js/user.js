@@ -164,19 +164,28 @@ export function initializeAccountUI() {
         localStorage.getItem("auth")
       );
       if (data.verified) {
+        // Reset the overlay content to the original account details
+        accountDetailsOverlay.innerHTML = accountDetails.outerHTML;
+
         // Update all user information at once
         await Promise.all([updateUserScore(), updateUserStats()]);
 
         // Show the popup
         accountDetailsOverlay.classList.add("show");
-        accountDetails.classList.remove("hidden");
+        accountDetailsOverlay
+          .querySelector("#accountDetails")
+          .classList.remove("hidden");
 
         // Update profile picture
         if (data.profilePicUrl) {
-          document.getElementById(
-            "userProfilePic"
+          accountDetailsOverlay.querySelector(
+            "#userProfilePic"
           ).src = `${API_URL}${data.profilePicUrl}`;
         }
+
+        // Update username
+        accountDetailsOverlay.querySelector("#detailsUsername").textContent =
+          currentUser;
       }
     } catch (error) {
       console.error("Failed to load account details:", error);
@@ -285,54 +294,140 @@ export async function loadSession() {
 }
 
 export async function showUserProfile(username) {
+  const overlay = document.getElementById("accountDetailsOverlay");
+
+  // Show loading state
+  overlay.innerHTML = `
+    <div id="userProfile" class="account-details-popup">
+      <div class="loading">Loading profile...</div>
+    </div>
+  `;
+  overlay.classList.add("show");
+
   try {
-    const [stats, scores] = await Promise.all([
-      getUserStats(username),
-      getUserScore(username),
-    ]);
-
-    const popup = document.getElementById("accountDetails").cloneNode(true);
-    popup.id = "userProfile";
-
-    // Update content
-    popup.querySelector("h3").textContent = username;
-    popup.querySelector("p").textContent = `Score: ${scores.score || 0}`;
-
-    // Update stats
-    if (stats) {
-      popup.querySelector("#gamesPlayed").textContent = stats.gamesPlayed;
-      popup.querySelector("#winRate").textContent = `${
-        Math.round((stats.gamesWon / stats.gamesPlayed) * 100) || 0
-      }%`;
-      popup.querySelector("#currentStreak").textContent = stats.winStreak;
-      popup.querySelector("#bestStreak").textContent = stats.bestStreak;
-
-      // Update distribution
-      const distributionContainer = popup.querySelector("#guessDistribution");
-      // ... (keep existing distribution code)
+    // For your own profile, show the regular account details
+    if (username === currentUser) {
+      overlay.innerHTML = "";
+      const accountDetails = document.getElementById("accountDetails");
+      accountDetails.classList.remove("hidden");
+      overlay.appendChild(accountDetails);
+      await Promise.all([updateUserScore(), updateUserStats()]);
+      return;
     }
 
-    // Remove account actions section
-    const actionsSection = popup.querySelector(".account-actions");
-    if (actionsSection) actionsSection.remove();
+    // Add profile picture to the data we fetch
+    const [stats, scores, userData] = await Promise.all([
+      getUserStats(username),
+      getUserScore(username),
+      fetch(`${API_URL}/api/search-users?query=${encodeURIComponent(username)}`)
+        .then((res) => res.json())
+        .then((users) => users.find((u) => u.username === username)),
+    ]);
 
-    // Add close button
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "Close";
-    closeBtn.onclick = () => {
-      document.getElementById("accountDetailsOverlay").classList.remove("show");
-      popup.remove();
-    };
-    popup.appendChild(closeBtn);
+    const popup = document.createElement("div");
+    popup.id = "userProfile";
+    popup.className = "account-details-popup";
 
-    // Show popup
-    const overlay = document.getElementById("accountDetailsOverlay");
+    // Update profile content to use the fetched profile picture
+    popup.innerHTML = `
+      <div class="user-info">
+        <div class="profile-picture">
+          <img src="${userData?.profilePic || `${API_URL}/uploads/0`}" 
+               alt="Profile Picture"
+               onerror="this.src='assets/img/default-avatar.png'">
+        </div>
+        <h3>${username}</h3>
+        <p>Score: ${scores.score || 0}</p>
+      </div>
+      <div class="user-stats">
+        <h4>Statistics</h4>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value">${stats.gamesPlayed}</div>
+            <div class="stat-label">Played</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${
+              Math.round((stats.gamesWon / stats.gamesPlayed) * 100) || 0
+            }%</div>
+            <div class="stat-label">Win Rate</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${stats.winStreak}</div>
+            <div class="stat-label">Streak</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${stats.bestStreak}</div>
+            <div class="stat-label">Best</div>
+          </div>
+        </div>
+        <div class="guess-distribution" id="userGuessDistribution"></div>
+      </div>
+      <button class="close-button">Close</button>
+    `;
+
     overlay.innerHTML = "";
     overlay.appendChild(popup);
-    overlay.classList.add("show");
-    popup.classList.remove("hidden");
+
+    // Add close button handler
+    popup.querySelector(".close-button").onclick = () => {
+      overlay.classList.remove("show");
+      popup.remove();
+    };
+
+    if (stats) {
+      const distributionContainer = popup.querySelector(".guess-distribution");
+
+      // Calculate maximum value for scaling
+      const allCounts = [...stats.distribution, stats.gamesLost];
+      const maxCount = Math.max(...allCounts, 1); // Ensure non-zero max
+
+      // Helper function to calculate width percentage
+      const getWidthPercent = (count) => {
+        if (count === 0) return 1; // Minimum 1% width for empty bars
+        return Math.max(5, (count / maxCount) * 100); // At least 5% width, scale up to 100%
+      };
+
+      // Add guesses distribution (1-5 attempts)
+      stats.distribution.forEach((count, index) => {
+        const bar = document.createElement("div");
+        bar.className = "distribution-bar";
+        const widthPercent = getWidthPercent(count);
+        bar.innerHTML = `
+          <span class="distribution-label">${index + 1}</span>
+          <div class="distribution-fill" style="width: ${widthPercent}%"></div>
+          <span class="distribution-value">${count}</span>
+        `;
+        distributionContainer.appendChild(bar);
+      });
+
+      // Add losses distribution if available
+      if (stats.gamesLost > 0) {
+        const widthPercent = getWidthPercent(stats.gamesLost);
+        const lossBar = document.createElement("div");
+        lossBar.className = "distribution-bar loss";
+        lossBar.innerHTML = `
+          <span class="distribution-label">✕</span>
+          <div class="distribution-fill loss" style="width: ${widthPercent}%"></div>
+          <span class="distribution-value">${stats.gamesLost}</span>
+        `;
+        distributionContainer.appendChild(lossBar);
+      }
+    }
   } catch (error) {
     console.error("Failed to load user profile:", error);
-    showMessage("Error", "Failed to load user profile");
+    overlay.innerHTML = `
+      <div id="userProfile" class="account-details-popup">
+        <div class="error">Failed to load profile</div>
+        <button class="close-button">Close</button>
+      </div>
+    `;
+    const closeBtn = overlay.querySelector(".close-button");
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        overlay.classList.remove("show");
+        overlay.innerHTML = "";
+      };
+    }
   }
 }

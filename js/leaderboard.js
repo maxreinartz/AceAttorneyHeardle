@@ -4,6 +4,7 @@ import { getLeaderboard } from "./api.js";
 export async function updateLeaderboard() {
   try {
     const leaderboard = await getLeaderboard();
+
     const list = document.getElementById("leaderboardList");
     list.innerHTML = "";
 
@@ -20,7 +21,7 @@ export async function updateLeaderboard() {
                }" 
                alt="${username}'s avatar"
                onerror="this.src='assets/img/default-avatar.png'" />
-          <span title="${username}">${index + 1}. ${username}</span>
+          <span>${index + 1}. ${username}</span>
         </div>
         <span>${score}</span>
       `;
