@@ -332,7 +332,7 @@ export async function showUserProfile(username) {
     popup.innerHTML = `
       <div class="user-info">
         <div class="profile-picture">
-          <img src="${userData?.profilePic || `${API_URL}/uploads/0`}" 
+          <img src="${`${API_URL}${userData?.profilePic}` || `${API_URL}/uploads/0`}" 
                alt="Profile Picture"
                onerror="this.src='assets/img/default-avatar.png'">
         </div>
