@@ -22,8 +22,8 @@ const BLACKLISTED_SONGS = [
 const allowedOrigins = [
   "http://127.0.0.1:7689",
   "http://localhost:7689",
-  "https://aceattorneyheardle.maxreinartz.me",
-  "https://backend.aceattorneyheardle.maxreinartz.me",
+  "https://aceattorneyheardle.maxreinartz.dev",
+  "https://backend.aceattorneyheardle.maxreinartz.dev",
 ];
 
 const app = express();
